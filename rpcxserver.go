@@ -10,7 +10,6 @@ type ServerOption struct {
 	ServerIp       string
 	Network        string
 	Port           string
-	Registry       string
 	BasePath       string
 	UpdateInterval time.Duration
 	RegistryAddr   []string

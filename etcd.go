@@ -10,7 +10,7 @@ import (
 
 func AddRegistryPlugin(s *server.Server, options *ServerOption, serverIp string) {
 	r := &serverplugin.EtcdRegisterPlugin{
-		ServiceAddress: options.Network + "@" + serverIp,
+		ServiceAddress: options.Network + "@" + options.ServerIp + ":" + options.Port,
 		EtcdServers:    options.RegistryAddr,
 		BasePath:       options.BasePath,
 		UpdateInterval: options.UpdateInterval,

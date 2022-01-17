@@ -8,7 +8,7 @@ import (
 	"github.com/smallnest/rpcx/server"
 )
 
-func AddRegistryPlugin(s *server.Server, options *ServerOption, serverIp string) {
+func AddRegistryPlugin(s *server.Server, options *ServerOption) {
 	r := &serverplugin.EtcdRegisterPlugin{
 		ServiceAddress: options.Network + "@" + options.ServerIp + ":" + options.Port,
 		EtcdServers:    options.RegistryAddr,

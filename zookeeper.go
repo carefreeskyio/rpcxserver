@@ -8,7 +8,7 @@ import (
 	"github.com/smallnest/rpcx/serverplugin"
 )
 
-func AddRegistryPlugin(s *server.Server, options *ServerOption, serverIp string) {
+func AddRegistryPlugin(s *server.Server, options *ServerOption) {
 	r := &serverplugin.ZooKeeperRegisterPlugin{
 		ServiceAddress:   options.Network + "@" + options.ServerIp + ":" + options.Port,
 		ZooKeeperServers: options.RegistryAddr,

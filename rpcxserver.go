@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"gopkg.in/ffmt.v1"
 )
 
 type RpcXServer struct {
@@ -59,6 +60,7 @@ func (s *RpcXServer) Start(network string, address string) {
 
 	go func() {
 		if err := s.Server.Serve(network, address); err != nil {
+			ffmt.Puts(err)
 			if err == server.ErrServerClosed {
 				logger.Info(s.ServerName + "stopped")
 			} else {

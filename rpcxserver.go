@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/carefreeskyio/logger"
 	"github.com/smallnest/rpcx/server"
+	"github.com/soheilhy/cmux"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-	"gopkg.in/ffmt.v1"
 )
 
 type RpcXServer struct {
@@ -60,8 +60,7 @@ func (s *RpcXServer) Start(network string, address string) {
 
 	go func() {
 		if err := s.Server.Serve(network, address); err != nil {
-			ffmt.Puts(err)
-			if err == server.ErrServerClosed {
+			if err == cmux.ErrListenerClosed {
 				logger.Info(s.ServerName + "stopped")
 			} else {
 				panic(err)

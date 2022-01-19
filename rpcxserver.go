@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/carefreeskyio/logger"
 	"github.com/smallnest/rpcx/server"
-	"github.com/soheilhy/cmux"
 	"os"
 	"os/signal"
 	"syscall"
@@ -60,11 +59,7 @@ func (s *RpcXServer) Start(network string, address string) {
 
 	go func() {
 		if err := s.Server.Serve(network, address); err != nil {
-			if err == cmux.ErrListenerClosed {
-				logger.Info(s.ServerName + "stopped")
-			} else {
-				panic(err)
-			}
+			panic(err)
 		}
 	}()
 	fmt.Println(s.ServerName + " start successfully")
@@ -90,14 +85,14 @@ func (s *RpcXServer) waitShutdown() {
 	<-sig
 
 	if err := s.Server.UnregisterAll(); err != nil {
-		logger.Error("call s.Server.UnregisterAll failed: err=%v", err)
+		logger.Errorf("call s.Server.UnregisterAll failed: err=%v", err)
 	}
 
 	s.onShutdown()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := s.Server.Shutdown(ctx); err != nil {
-		logger.Error("call s.Server.Shutdown failed: err=%v", err)
+		logger.Errorf("call s.Server.Shutdown failed: err=%v", err)
 	}
 	cancel()
 }

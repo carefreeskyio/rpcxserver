@@ -2,6 +2,7 @@ package rpcxserver
 
 import (
 	"context"
+	"fmt"
 	"github.com/carefreeskyio/logger"
 	"github.com/smallnest/rpcx/server"
 	"os"
@@ -11,6 +12,7 @@ import (
 )
 
 type RpcXServer struct {
+	ServerName       string
 	Server           *server.Server
 	OnStartAction    []func(s *server.Server)
 	OnShutdownAction []func(s *server.Server)
@@ -39,7 +41,8 @@ func NewServer(option *ServerOption) *RpcXServer {
 	}
 
 	return &RpcXServer{
-		Server: s,
+		ServerName: option.ServerName,
+		Server:     s,
 	}
 }
 
@@ -56,9 +59,14 @@ func (s *RpcXServer) Start(network string, address string) {
 
 	go func() {
 		if err := s.Server.Serve(network, address); err != nil {
-			panic(err)
+			if err == server.ErrServerClosed {
+				logger.Info(s.ServerName + "stopped")
+			} else {
+				panic(err)
+			}
 		}
 	}()
+	fmt.Println(s.ServerName + " start successfully")
 
 	s.waitShutdown()
 }

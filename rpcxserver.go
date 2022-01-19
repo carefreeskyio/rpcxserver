@@ -23,7 +23,9 @@ type ServerOption struct {
 	Port           string
 	BasePath       string
 	UpdateInterval time.Duration
+	Group          string
 	RegistryAddr   []string
+	Service        interface{}
 }
 
 func NewServer(option *ServerOption) *RpcXServer {
@@ -31,6 +33,10 @@ func NewServer(option *ServerOption) *RpcXServer {
 	s := server.NewServer()
 
 	AddRegistryPlugin(s, option)
+
+	if err := s.RegisterName(option.ServerName, option.Service, "group="+option.Group); err != nil {
+		logger.Fatalf("start service failed: err=%v", err)
+	}
 
 	return &RpcXServer{
 		Server: s,

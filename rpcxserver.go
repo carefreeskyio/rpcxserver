@@ -14,8 +14,8 @@ import (
 type RpcXServer struct {
 	ServerName       string
 	Server           *server.Server
-	OnStartAction    []func(s *server.Server)
-	OnShutdownAction []func(s *server.Server)
+	onStartAction    []func(s *server.Server)
+	onShutdownAction []func(s *server.Server)
 }
 
 type ServerOption struct {
@@ -47,11 +47,11 @@ func NewServer(option *ServerOption) *RpcXServer {
 }
 
 func (s *RpcXServer) AddOnStartAction(fn func(s *server.Server)) {
-	s.OnStartAction = append(s.OnStartAction, fn)
+	s.onStartAction = append(s.onStartAction, fn)
 }
 
 func (s *RpcXServer) AddOnShutdownAction(fn func(s *server.Server)) {
-	s.OnShutdownAction = append(s.OnShutdownAction, fn)
+	s.onShutdownAction = append(s.onShutdownAction, fn)
 }
 
 func (s *RpcXServer) Start(network string, address string) {
@@ -59,7 +59,11 @@ func (s *RpcXServer) Start(network string, address string) {
 
 	go func() {
 		if err := s.Server.Serve(network, address); err != nil {
-			panic(err)
+			if err == server.ErrServerClosed {
+				logger.Info(err)
+			} else {
+				panic(err)
+			}
 		}
 	}()
 	fmt.Println(s.ServerName + " start successfully")
@@ -68,13 +72,13 @@ func (s *RpcXServer) Start(network string, address string) {
 }
 
 func (s *RpcXServer) onStart() {
-	for _, fn := range s.OnStartAction {
+	for _, fn := range s.onStartAction {
 		fn(s.Server)
 	}
 }
 
 func (s *RpcXServer) onShutdown() {
-	for _, fn := range s.OnShutdownAction {
+	for _, fn := range s.onShutdownAction {
 		fn(s.Server)
 	}
 }
@@ -83,10 +87,6 @@ func (s *RpcXServer) waitShutdown() {
 	sig := make(chan os.Signal, 2)
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
 	<-sig
-
-	if err := s.Server.UnregisterAll(); err != nil {
-		logger.Errorf("call s.Server.UnregisterAll failed: err=%v", err)
-	}
 
 	s.onShutdown()
 

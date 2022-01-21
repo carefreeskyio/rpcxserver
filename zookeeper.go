@@ -6,6 +6,7 @@ import (
 	"github.com/carefreeskyio/logger"
 	"github.com/smallnest/rpcx/server"
 	"github.com/smallnest/rpcx/serverplugin"
+	"time"
 )
 
 func AddRegistryPlugin(s *server.Server, options *ServerOption) {
@@ -13,7 +14,7 @@ func AddRegistryPlugin(s *server.Server, options *ServerOption) {
 		ServiceAddress:   options.Network + "@" + options.ServerIp + ":" + options.Port,
 		ZooKeeperServers: options.RegistryAddr,
 		BasePath:         options.BasePath,
-		UpdateInterval:   options.UpdateInterval,
+		UpdateInterval:   options.UpdateInterval * time.Minute,
 	}
 	if err := r.Start(); err != nil {
 		logger.Fatal(err)

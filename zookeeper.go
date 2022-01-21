@@ -11,10 +11,10 @@ import (
 
 func AddRegistryPlugin(s *server.Server, options *ServerOption) {
 	r := &serverplugin.ZooKeeperRegisterPlugin{
-		ServiceAddress:   options.Network + "@" + options.ServerIp + ":" + options.Port,
-		ZooKeeperServers: options.RegistryAddr,
-		BasePath:         options.BasePath,
-		UpdateInterval:   options.UpdateInterval * time.Minute,
+		ServiceAddress:   options.Server.Network + "@" + options.Server.Addr + ":" + options.Server.Port,
+		ZooKeeperServers: options.Registry.Addr,
+		BasePath:         options.Registry.BasePath,
+		UpdateInterval:   options.Registry.UpdateInterval * time.Second,
 	}
 	if err := r.Start(); err != nil {
 		logger.Fatal(err)

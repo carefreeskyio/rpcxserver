@@ -9,12 +9,12 @@ import (
 	"time"
 )
 
-func AddRegistryPlugin(s *server.Server, options *ServerOption) {
+func AddRegistryPlugin(s *server.Server, options *Options) {
 	r := &serverplugin.EtcdV3RegisterPlugin{
-		ServiceAddress: options.Network + "@" + options.ServerIp + ":" + options.Port,
-		EtcdServers:    options.RegistryAddr,
-		BasePath:       options.BasePath,
-		UpdateInterval: options.UpdateInterval * time.Minute,
+		ServiceAddress: options.Server.Network + "@" + options.Server.Addr + ":" + options.Server.Port,
+		EtcdServers:    options.Registry.Addr,
+		BasePath:       options.Registry.BasePath,
+		UpdateInterval: options.Registry.UpdateInterval * time.Second,
 	}
 	if err := r.Start(); err != nil {
 		logger.Fatal(err)

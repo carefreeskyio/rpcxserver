@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/carefreeskyio/logger"
 	"github.com/smallnest/rpcx/server"
+	"github.com/smallnest/rpcx/serverplugin"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,30 +20,60 @@ type RpcXServer struct {
 }
 
 type ServerOption struct {
-	ServerName     string
-	ServerIp       string
-	Network        string
-	Port           string
+	Name    string
+	Addr    string
+	Network string
+	Port    string
+}
+
+type RegistryOption struct {
+	Addr           []string
 	BasePath       string
 	UpdateInterval time.Duration
 	Group          string
-	RegistryAddr   []string
-	Service        interface{}
 }
 
-func NewServer(option *ServerOption) *RpcXServer {
+type RateLimitOption struct {
+	Enable       bool
+	FillInterval time.Duration
+	Capacity     int64
+}
 
+type Options struct {
+	Server    ServerOption
+	Registry  RegistryOption
+	Service   interface{}
+	RateLimit RateLimitOption
+	Plugin    []server.Plugin
+}
+
+func NewServer(options *Options) *RpcXServer {
 	s := server.NewServer()
 
-	AddRegistryPlugin(s, option)
+	AddRegistryPlugin(s, options)
 
-	if err := s.RegisterName(option.ServerName, option.Service, "group="+option.Group); err != nil {
+	if options.RateLimit.Enable {
+		options.Plugin = append(options.Plugin, serverplugin.NewReqRateLimitingPlugin(options.RateLimit.FillInterval, options.RateLimit.Capacity, true))
+	}
+
+	addPlugins(s, options.Plugin)
+
+	if err := s.RegisterName(options.Server.Name, options.Service, "group="+options.Registry.Group); err != nil {
 		logger.Fatalf("start service failed: err=%v", err)
 	}
 
 	return &RpcXServer{
-		ServerName: option.ServerName,
+		ServerName: options.Server.Name,
 		Server:     s,
+	}
+}
+
+func addPlugins(server *server.Server, plugins []server.Plugin) {
+	if len(plugins) == 0 {
+		return
+	}
+	for _, p := range plugins {
+		server.Plugins.Add(p)
 	}
 }
 

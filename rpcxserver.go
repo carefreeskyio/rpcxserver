@@ -3,7 +3,8 @@ package rpcxserver
 import (
 	"context"
 	"fmt"
-	"github.com/carefreeskyio/logger"
+	"github.com/carefreex-io/config"
+	"github.com/carefreex-io/logger"
 	"github.com/smallnest/rpcx/server"
 	"github.com/smallnest/rpcx/serverplugin"
 	"os"
@@ -17,6 +18,12 @@ type RpcXServer struct {
 	Server           *server.Server
 	onStartAction    []func(s *server.Server)
 	onShutdownAction []func(s *server.Server)
+}
+
+type BaseOptions struct {
+	Server    ServerOption
+	Registry  RegistryOption
+	RateLimit RateLimitOption
 }
 
 type ServerOption struct {
@@ -39,31 +46,56 @@ type RateLimitOption struct {
 	Capacity     int64
 }
 
-type Options struct {
-	Server    ServerOption
-	Registry  RegistryOption
-	Service   interface{}
-	RateLimit RateLimitOption
-	Plugin    []server.Plugin
+type CustomOptions struct {
+	Service interface{}
+	Plugin  []server.Plugin
 }
 
-func NewServer(options *Options) *RpcXServer {
+var (
+	baseOptions          *BaseOptions
+	DefaultCustomOptions = &CustomOptions{}
+)
+
+func initBaseOptions() {
+	baseOptions = &BaseOptions{
+		Server: ServerOption{
+			Name:    config.GetString("Service.Name"),
+			Network: config.GetString("Service.Network"),
+			Port:    config.GetString("Service.Port"),
+		},
+		Registry: RegistryOption{
+			Addr:           config.GetStringSlice("Registry.Addr"),
+			BasePath:       config.GetString("Registry.BasePath"),
+			UpdateInterval: config.GetDuration("Registry.UpdateInterval"),
+			Group:          config.GetString("Registry.Group"),
+		},
+		RateLimit: RateLimitOption{
+			Enable:       config.GetBool("RateLimit.Enable"),
+			FillInterval: config.GetDuration("RateLimit.FillInterval"),
+			Capacity:     config.GetInt64("RateLimit.Token"),
+		},
+	}
+}
+
+func NewServer() *RpcXServer {
+	initBaseOptions()
+
 	s := server.NewServer()
 
-	AddRegistryPlugin(s, options)
+	AddRegistryPlugin(s, baseOptions)
 
-	if options.RateLimit.Enable {
-		options.Plugin = append(options.Plugin, serverplugin.NewReqRateLimitingPlugin(options.RateLimit.FillInterval, options.RateLimit.Capacity, true))
+	if config.GetBool("RateLimit.Enable") {
+		DefaultCustomOptions.Plugin = append(DefaultCustomOptions.Plugin, serverplugin.NewReqRateLimitingPlugin(baseOptions.RateLimit.FillInterval, baseOptions.RateLimit.Capacity, true))
 	}
 
-	addPlugins(s, options.Plugin)
+	addPlugins(s, DefaultCustomOptions.Plugin)
 
-	if err := s.RegisterName(options.Server.Name, options.Service, "group="+options.Registry.Group); err != nil {
+	if err := s.RegisterName(baseOptions.Server.Name, DefaultCustomOptions.Service, "group="+baseOptions.Registry.Group); err != nil {
 		logger.Fatalf("start service failed: err=%v", err)
 	}
 
 	return &RpcXServer{
-		ServerName: options.Server.Name,
+		ServerName: baseOptions.Server.Name,
 		Server:     s,
 	}
 }

@@ -3,7 +3,7 @@
 package rpcxserver
 
 import (
-	"github.com/carefreeskyio/logger"
+	"github.com/carefreex-io/logger"
 	"github.com/smallnest/rpcx/server"
 	"github.com/smallnest/rpcx/serverplugin"
 	"time"

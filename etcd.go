@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func AddRegistryPlugin(s *server.Server, options *Options) {
+func AddRegistryPlugin(s *server.Server, options *BaseOptions) {
 	r := &serverplugin.EtcdRegisterPlugin{
 		ServiceAddress: options.Server.Network + "@" + options.Server.Addr + ":" + options.Server.Port,
 		EtcdServers:    options.Registry.Addr,

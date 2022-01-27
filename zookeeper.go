@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func AddRegistryPlugin(s *server.Server, options *ServerOption) {
+func AddRegistryPlugin(s *server.Server, options **BaseOptions) {
 	r := &serverplugin.ZooKeeperRegisterPlugin{
 		ServiceAddress:   options.Server.Network + "@" + options.Server.Addr + ":" + options.Server.Port,
 		ZooKeeperServers: options.Registry.Addr,

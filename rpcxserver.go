@@ -7,6 +7,7 @@ import (
 	"github.com/carefreex-io/logger"
 	"github.com/smallnest/rpcx/server"
 	"github.com/smallnest/rpcx/serverplugin"
+	"github.com/smallnest/rpcx/util"
 	"os"
 	"os/signal"
 	"syscall"
@@ -57,11 +58,17 @@ var (
 )
 
 func initBaseOptions() {
+	addr, err := util.ExternalIPV4()
+	if err != nil {
+		logger.Fatalf("get ipv4 failed: err=%v\n", err)
+	}
+
 	baseOptions = &BaseOptions{
 		Server: ServerOption{
 			Name:    config.GetString("Service.Name"),
 			Network: config.GetString("Service.Network"),
 			Port:    config.GetString("Service.Port"),
+			Addr:    addr,
 		},
 		Registry: RegistryOption{
 			Addr:           config.GetStringSlice("Registry.Addr"),
@@ -117,11 +124,11 @@ func (s *RpcXServer) AddOnShutdownAction(fn func(s *server.Server)) {
 	s.onShutdownAction = append(s.onShutdownAction, fn)
 }
 
-func (s *RpcXServer) Start(network string, address string) {
+func (s *RpcXServer) Start() {
 	s.onStart()
 
 	go func() {
-		if err := s.Server.Serve(network, address); err != nil {
+		if err := s.Server.Serve(baseOptions.Server.Network, baseOptions.Server.Addr+":"+baseOptions.Server.Port); err != nil {
 			if err == server.ErrServerClosed {
 				logger.Info(err)
 			} else {
